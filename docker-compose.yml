@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:alpine
+    container_name: sgor-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=soc_cars_user
+      - POSTGRES_PASSWORD=soc_cars_999
+      - POSTGRES_DB=soc_cars_db
+      - "5432:5432"
+    expose:
+      - "5432"
+
+  soc_cars_admin:
+    build: soc-cars-admin
+    container_name: soc_cars_admin
+    restart: always
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    volumes:
+      - ./soc-cars-admin:/code
+    environment:
+      - DATABASE_URL=postgresql://soc_cars_user:soc_cars_999@db:5432/soc_cars_db
+
+
+  soc_cars_user:
+    build: soc-cars-user
+    container_name: soc_cars_user
+    restart: always
+    ports:
+      - "8002:8002"
+    depends_on:
+      - db
+    volumes:
+      - ./soc-cars-user:/code
+    environment:
+      - DATABASE_URL=postgresql://soc_cars_user:soc_cars_999@db:5432/soc_cars_db
+
+
+# networks:
+#   default:
+#       name: hello_fastapi
