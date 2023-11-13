@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sgor-postgres-pod
+spec:
+  containers:
+    - name: db
+      image: postgres:alpine
+      env:
+        - name: POSTGRES_USER
+          value: sgor_user
+        - name: POSTGRES_PASSWORD
+          value: sgor_123
+        - name: POSTGRES_DB
+          value: sgor_db
+      ports:
+        - containerPort: 5432
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sports-items-manager-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sports-items-manager
+  template:
+    metadata:
+      labels:
+        app: sports-items-manager
+    spec:
+      containers:
+        - name: sports-items-manager
+          image: sports_items_manager-sports_items_manager
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          env:
+            - name: DATABASE_URL
+              value: postgresql://sgor_user:sgor_123@sgor-postgres-pod:5432/sgor_db
+            - name: PYTHONPATH
+              value: /app
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sports-items-user-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sports-items-user
+  template:
+    metadata:
+      labels:
+        app: sports-items-user
+    spec:
+      containers:
+        - name: sports-items-user
+          image: sports_items_manager-sports_items_user
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 90
+          env:
+            - name: DATABASE_URL
+              value: postgresql://sgor_user:sgor_123@sgor-postgres-pod:5432/sgor_db
+            - name: PYTHONPATH
+              value: /app
